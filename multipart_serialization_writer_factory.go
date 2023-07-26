@@ -17,7 +17,7 @@ func NewMultipartSerializationWriterFactory() *MultipartSerializationWriterFacto
 
 // GetValidContentType returns the valid content type for the SerializationWriterFactoryRegistry
 func (f *MultipartSerializationWriterFactory) GetValidContentType() (string, error) {
-	return "application/x-www-Multipart-urlencoded", nil
+	return "multipart/form-data", nil
 }
 
 // GetSerializationWriter returns the relevant SerializationWriter instance for the given content type
