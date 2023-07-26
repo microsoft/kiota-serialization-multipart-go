@@ -66,5 +66,5 @@ jobs:
     #   make bootstrap
     #   make release
 
-    - name: Perform CodeQL Analysis
+    - name: PerMultipart CodeQL Analysis
       uses: github/codeql-action/analyze@v2
