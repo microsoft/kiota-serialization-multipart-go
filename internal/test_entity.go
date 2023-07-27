@@ -214,5 +214,11 @@ func (m *TestEntity) Serialize(writer absser.SerializationWriter) error {
 			return err
 		}
 	}
+	{
+		err := writer.WriteAdditionalData(m.GetAdditionalData())
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

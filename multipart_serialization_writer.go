@@ -37,6 +37,7 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 		}
 		w.WriteByteArrayValue("", []byte(*value))
 	}
+	w.WriteByteArrayValue("", []byte("\r\n"))
 	return nil
 }
 
