@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/google/uuid v1.6.0
 	github.com/microsoft/kiota-abstractions-go v1.9.1
-	github.com/microsoft/kiota-serialization-json-go v1.1.0
+	github.com/microsoft/kiota-serialization-json-go v1.1.1
 	github.com/stretchr/testify v1.10.0
 )
 
