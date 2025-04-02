@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.1...v1.1.2) (2025-04-02)
+
+
+### Bug Fixes
+
+* removes common go dependency ([d4086ca](https://github.com/microsoft/kiota-serialization-multipart-go/commit/d4086caae32a827aba998ffb0f68f2da912b87e8))
+* removes common go dependency ([028bb1e](https://github.com/microsoft/kiota-serialization-multipart-go/commit/028bb1e66ebaae555eb85beac967f23116722119))
+
 ## [1.1.1](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.0...v1.1.1) (2025-03-24)
 
 
