@@ -10,7 +10,7 @@ updates:
   groups:
     codeql:
       patterns:
-      - github/codeql-action
+      - github/codeql-action*
 - package-ecosystem: gomod
   directory: /
   schedule:
