@@ -2,11 +2,12 @@ package multipartserialization
 
 import (
 	"errors"
+	"strings"
 
 	absser "github.com/microsoft/kiota-abstractions-go/serialization"
 )
 
-// MultipartSerializationWriterFactory implements SerializationWriterFactory for URI Multipart encoded.
+// MultipartSerializationWriterFactory implements SerializationWriterFactory for multipart/form-data.
 type MultipartSerializationWriterFactory struct {
 }
 
@@ -27,9 +28,13 @@ func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType
 		return nil, err
 	} else if contentType == "" {
 		return nil, errors.New("contentType is empty")
-	} else if contentType != validType {
-		return nil, errors.New("contentType is not valid")
-	} else {
-		return NewMultipartSerializationWriter(), nil
 	}
+
+	normalized := strings.ToLower(strings.TrimSpace(contentType))
+	if normalized != validType && !strings.HasPrefix(normalized, validType+";") {
+		return nil, errors.New("contentType is not valid")
+	}
+
+	return NewMultipartSerializationWriter(), nil
 }
+

@@ -11,7 +11,7 @@ import (
 	absser "github.com/microsoft/kiota-abstractions-go/serialization"
 )
 
-// MultipartSerializationWriter implements SerializationWriter for URI Multipart encoded.
+// MultipartSerializationWriter implements SerializationWriter for multipart/form-data.
 type MultipartSerializationWriter struct {
 	writer                     []byte
 	onBeforeAssignFieldValues  absser.ParsableAction
@@ -121,11 +121,10 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
 		}
 		err = item.Serialize(w)
-
-		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), item)
 		if err != nil {
 			return err
 		}
+		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), item)
 	}
 	return nil
 }
