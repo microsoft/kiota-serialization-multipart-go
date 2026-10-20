@@ -20,6 +20,8 @@ func TestItGetsASerializationWriter(t *testing.T) {
 		"multipart/form-data; boundary=---------------------------974767299852498929531610575",
 		"MULTIPART/FORM-DATA",
 		" multipart/form-data; charset=utf-8 ",
+		"multipart/form-data ; boundary=abc",
+		"multipart/form-data\t; boundary=abc",
 	}
 	for _, ct := range validContentTypes {
 		writer, err := instance.GetSerializationWriter(ct)
@@ -48,4 +50,3 @@ func TestItReturnsErrorOnEmptyContentType(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, writer)
 }
-

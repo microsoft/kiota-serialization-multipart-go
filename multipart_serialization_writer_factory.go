@@ -30,11 +30,10 @@ func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType
 		return nil, errors.New("contentType is empty")
 	}
 
-	normalized := strings.ToLower(strings.TrimSpace(contentType))
-	if normalized != validType && !strings.HasPrefix(normalized, validType+";") {
+	mediaType, _, _ := strings.Cut(contentType, ";")
+	if strings.ToLower(strings.TrimSpace(mediaType)) != validType {
 		return nil, errors.New("contentType is not valid")
 	}
 
 	return NewMultipartSerializationWriter(), nil
 }
-
