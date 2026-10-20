@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.3](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.2...v1.1.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **multipart:** accept whitespace before parameters ([f489f05](https://github.com/microsoft/kiota-serialization-multipart-go/commit/f489f05bdfbb64d04ba3a7b12aff894f66663cf2))
+* **multipart:** support content type parameters and check serialization error before callback ([96fe37e](https://github.com/microsoft/kiota-serialization-multipart-go/commit/96fe37e98c6acd42819de1baf1df5f4b5cd7aed6))
+* **multipart:** support content type parameters and check serialization error before callback ([c316d68](https://github.com/microsoft/kiota-serialization-multipart-go/commit/c316d68ee2be06e5ef0e406eb7e94e79f7025d9e))
+
 ## [1.1.2](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.1...v1.1.2) (2025-04-02)
 
 
