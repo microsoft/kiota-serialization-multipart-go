@@ -15,13 +15,38 @@ func TestMultipartSerializationFactoryWriterHonoursInterface(t *testing.T) {
 
 func TestItGetsASerializationWriter(t *testing.T) {
 	instance := NewMultipartSerializationWriterFactory()
-	writer, err := instance.GetSerializationWriter("multipart/form-data")
-	assert.Nil(t, err)
-	assert.NotNil(t, writer)
+	validContentTypes := []string{
+		"multipart/form-data",
+		"multipart/form-data; boundary=---------------------------974767299852498929531610575",
+		"MULTIPART/FORM-DATA",
+		" multipart/form-data; charset=utf-8 ",
+		"multipart/form-data ; boundary=abc",
+		"multipart/form-data\t; boundary=abc",
+	}
+	for _, ct := range validContentTypes {
+		writer, err := instance.GetSerializationWriter(ct)
+		assert.NoError(t, err)
+		assert.NotNil(t, writer)
+	}
 }
+
 func TestItReturnsAndErrorOnTheWrongContentType(t *testing.T) {
 	instance := NewMultipartSerializationWriterFactory()
-	writer, err := instance.GetSerializationWriter("application/json")
-	assert.NotNil(t, err)
+	invalidContentTypes := []string{
+		"application/json",
+		"multipart/related",
+		"text/plain",
+	}
+	for _, ct := range invalidContentTypes {
+		writer, err := instance.GetSerializationWriter(ct)
+		assert.Error(t, err)
+		assert.Nil(t, writer)
+	}
+}
+
+func TestItReturnsErrorOnEmptyContentType(t *testing.T) {
+	instance := NewMultipartSerializationWriterFactory()
+	writer, err := instance.GetSerializationWriter("")
+	assert.Error(t, err)
 	assert.Nil(t, writer)
 }
