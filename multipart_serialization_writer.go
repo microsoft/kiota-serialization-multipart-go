@@ -32,16 +32,21 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 		return errors.New("writer cannot be nil")
 	}
 	if key != "" {
-		_ = w.WriteByteArrayValue("", []byte(key))
+		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
+			return err
+		}
 	}
 	if value != nil {
 		if key != "" {
-			_ = w.WriteByteArrayValue("", []byte(": "))
+			if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
+				return err
+			}
 		}
-		_ = w.WriteByteArrayValue("", []byte(*value))
+		if err := w.WriteByteArrayValue("", []byte(*value)); err != nil {
+			return err
+		}
 	}
-	_ = w.WriteByteArrayValue("", []byte("\r\n"))
-	return nil
+	return w.WriteByteArrayValue("", []byte("\r\n"))
 }
 
 // WriteBoolValue writes a Bool value to underlying the byte array.
