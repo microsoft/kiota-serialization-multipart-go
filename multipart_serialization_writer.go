@@ -28,17 +28,25 @@ func NewMultipartSerializationWriter() *MultipartSerializationWriter {
 
 // WriteStringValue writes a String value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteStringValue(key string, value *string) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	if key != "" {
-		w.WriteByteArrayValue("", []byte(key))
+		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
+			return err
+		}
 	}
 	if value != nil {
 		if key != "" {
-			w.WriteByteArrayValue("", []byte(": "))
+			if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
+				return err
+			}
 		}
-		w.WriteByteArrayValue("", []byte(*value))
+		if err := w.WriteByteArrayValue("", []byte(*value)); err != nil {
+			return err
+		}
 	}
-	w.WriteByteArrayValue("", []byte("\r\n"))
-	return nil
+	return w.WriteByteArrayValue("", []byte("\r\n"))
 }
 
 // WriteBoolValue writes a Bool value to underlying the byte array.
@@ -103,6 +111,9 @@ func (w *MultipartSerializationWriter) WriteUUIDValue(key string, value *uuid.UU
 
 // WriteByteArrayValue writes a ByteArray value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteByteArrayValue(key string, value []byte) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	if value != nil {
 		w.writer = append(w.writer, value...)
 	}
@@ -111,6 +122,9 @@ func (w *MultipartSerializationWriter) WriteByteArrayValue(key string, value []b
 
 // WriteObjectValue writes a Parsable value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.Parsable, additionalValuesToMerge ...absser.Parsable) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	if item != nil {
 		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), item)
 		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), item, w)
@@ -201,6 +215,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfInt8Values(key string, c
 
 // GetSerializedContent returns the resulting byte array from the serialization writer.
 func (w *MultipartSerializationWriter) GetSerializedContent() ([]byte, error) {
+	if w == nil {
+		return nil, errors.New("writer cannot be nil")
+	}
 	return w.writer, nil
 }
 
@@ -216,6 +233,9 @@ func (w *MultipartSerializationWriter) WriteAdditionalData(value map[string]inte
 
 // Close clears the internal buffer.
 func (w *MultipartSerializationWriter) Close() error {
+	if w == nil {
+		return nil
+	}
 	w.writer = make([]byte, 0)
 	return nil
 }

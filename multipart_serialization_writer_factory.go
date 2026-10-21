@@ -23,14 +23,19 @@ func (f *MultipartSerializationWriterFactory) GetValidContentType() (string, err
 
 // GetSerializationWriter returns the relevant SerializationWriter instance for the given content type
 func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType string) (absser.SerializationWriter, error) {
+	if f == nil {
+		return nil, errors.New("factory cannot be nil")
+	}
 	validType, err := f.GetValidContentType()
 	if err != nil {
 		return nil, err
-	} else if contentType == "" {
+	}
+	trimmed := strings.TrimSpace(contentType)
+	if trimmed == "" {
 		return nil, errors.New("contentType is empty")
 	}
 
-	mediaType, _, _ := strings.Cut(contentType, ";")
+	mediaType, _, _ := strings.Cut(trimmed, ";")
 	if strings.ToLower(strings.TrimSpace(mediaType)) != validType {
 		return nil, errors.New("contentType is not valid")
 	}

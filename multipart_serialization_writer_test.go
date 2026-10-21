@@ -94,3 +94,16 @@ func TestItWritesAStructuredObject(t *testing.T) {
 	assert.Equal(t, testEntity.GetAdditionalData()["mobilePhone"], deserializedEntity.GetAdditionalData()["mobilePhone"])
 	// doing this as maps in Go don't guarantee order
 }
+func TestNilWriterDoesNotPanic(t *testing.T) {
+	var nilWriter *MultipartSerializationWriter
+	assert.NoError(t, nilWriter.Close())
+
+	content, err := nilWriter.GetSerializedContent()
+	assert.Error(t, err)
+	assert.Nil(t, content)
+
+	val := "test"
+	assert.Error(t, nilWriter.WriteStringValue("k", &val))
+	assert.Error(t, nilWriter.WriteByteArrayValue("k", []byte{1, 2, 3}))
+	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
+}
