@@ -50,3 +50,16 @@ func TestItReturnsErrorOnEmptyContentType(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, writer)
 }
+func TestItReturnsErrorOnWhitespaceContentType(t *testing.T) {
+	instance := NewMultipartSerializationWriterFactory()
+	writer, err := instance.GetSerializationWriter("   ")
+	assert.EqualError(t, err, "contentType is empty")
+	assert.Nil(t, writer)
+}
+
+func TestNilFactoryReturnsError(t *testing.T) {
+	var nilFactory *MultipartSerializationWriterFactory
+	writer, err := nilFactory.GetSerializationWriter("multipart/form-data")
+	assert.EqualError(t, err, "factory cannot be nil")
+	assert.Nil(t, writer)
+}
