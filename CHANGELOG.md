@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.4](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.3...v1.1.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* **multipart:** return potential errors in WriteStringValue ([669d99e](https://github.com/microsoft/kiota-serialization-multipart-go/commit/669d99ec1a16221dad9abbc8ca935831a1bca783))
+* **multipart:** trim whitespace on content type check and add nil receiver guards ([0df2716](https://github.com/microsoft/kiota-serialization-multipart-go/commit/0df2716e6db2e4d0c18248c74f57bc5ecaf11798))
+* **multipart:** trim whitespace on content type check and add nil receiver guards ([a13ef4f](https://github.com/microsoft/kiota-serialization-multipart-go/commit/a13ef4f9429868c49c43177befd035ae474470b7))
+
 ## [1.1.3](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.2...v1.1.3) (2026-10-20)
 
 
