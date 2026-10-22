@@ -63,3 +63,10 @@ func TestNilFactoryReturnsError(t *testing.T) {
 	assert.EqualError(t, err, "factory cannot be nil")
 	assert.Nil(t, writer)
 }
+
+func TestNilFactoryGetValidContentTypeReturnsError(t *testing.T) {
+	var nilFactory *MultipartSerializationWriterFactory
+	contentType, err := nilFactory.GetValidContentType()
+	assert.EqualError(t, err, "factory cannot be nil")
+	assert.Empty(t, contentType)
+}
