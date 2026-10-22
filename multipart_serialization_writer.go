@@ -140,6 +140,24 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 		}
 		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), item)
 	}
+	for _, additionalValue := range additionalValuesToMerge {
+		if additionalValue == nil {
+			continue
+		}
+		if _, ok := additionalValue.(abstractions.MultipartBody); !ok {
+			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+		}
+		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), additionalValue)
+		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), additionalValue, w)
+		if err != nil {
+			return err
+		}
+		err = additionalValue.Serialize(w)
+		if err != nil {
+			return err
+		}
+		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), additionalValue)
+	}
 	return nil
 }
 
@@ -245,28 +263,46 @@ func (w *MultipartSerializationWriter) WriteNullValue(key string) error {
 }
 
 func (w *MultipartSerializationWriter) GetOnBeforeSerialization() absser.ParsableAction {
+	if w == nil {
+		return nil
+	}
 	return w.onBeforeAssignFieldValues
 }
 
 func (w *MultipartSerializationWriter) SetOnBeforeSerialization(action absser.ParsableAction) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onBeforeAssignFieldValues = action
 	return nil
 }
 
 func (w *MultipartSerializationWriter) GetOnAfterObjectSerialization() absser.ParsableAction {
+	if w == nil {
+		return nil
+	}
 	return w.onAfterAssignFieldValues
 }
 
 func (w *MultipartSerializationWriter) SetOnAfterObjectSerialization(action absser.ParsableAction) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onAfterAssignFieldValues = action
 	return nil
 }
 
 func (w *MultipartSerializationWriter) GetOnStartObjectSerialization() absser.ParsableWriter {
+	if w == nil {
+		return nil
+	}
 	return w.onStartObjectSerialization
 }
 
 func (w *MultipartSerializationWriter) SetOnStartObjectSerialization(writer absser.ParsableWriter) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onStartObjectSerialization = writer
 	return nil
 }
