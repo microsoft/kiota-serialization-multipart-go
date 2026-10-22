@@ -106,4 +106,35 @@ func TestNilWriterDoesNotPanic(t *testing.T) {
 	assert.Error(t, nilWriter.WriteStringValue("k", &val))
 	assert.Error(t, nilWriter.WriteByteArrayValue("k", []byte{1, 2, 3}))
 	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
+
+	assert.Nil(t, nilWriter.GetOnBeforeSerialization())
+	assert.Error(t, nilWriter.SetOnBeforeSerialization(func(absser.Parsable) error { return nil }))
+	assert.Nil(t, nilWriter.GetOnAfterObjectSerialization())
+	assert.Error(t, nilWriter.SetOnAfterObjectSerialization(func(absser.Parsable) error { return nil }))
+	assert.Nil(t, nilWriter.GetOnStartObjectSerialization())
+	assert.Error(t, nilWriter.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }))
+}
+
+func TestWriteObjectValueWithAdditionalValuesToMerge(t *testing.T) {
+	writer := NewMultipartSerializationWriter()
+	mockRequestAdapter := &internal.MockRequestAdapter{
+		SerializationWriterFactory: jsonser.NewJsonSerializationWriterFactory(),
+	}
+
+	part1 := abstractions.NewMultipartBody()
+	part1.SetRequestAdapter(mockRequestAdapter)
+	part1.AddOrReplacePart("field1", "application/octet-stream", []byte("hello"))
+
+	part2 := abstractions.NewMultipartBody()
+	part2.SetRequestAdapter(mockRequestAdapter)
+	part2.AddOrReplacePart("field2", "application/octet-stream", []byte("world"))
+
+	err := writer.WriteObjectValue("", part1, part2)
+	assert.NoError(t, err)
+
+	content, err := writer.GetSerializedContent()
+	assert.NoError(t, err)
+	str := string(content)
+	assert.Contains(t, str, "field1")
+	assert.Contains(t, str, "field2")
 }
