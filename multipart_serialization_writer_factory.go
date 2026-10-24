@@ -8,6 +8,9 @@ import (
 )
 
 // MultipartSerializationWriterFactory implements SerializationWriterFactory for multipart/form-data.
+var _ absser.SerializationWriterFactory = (*MultipartSerializationWriterFactory)(nil)
+
+// MultipartSerializationWriterFactory implements SerializationWriterFactory for multipart/form-data.
 type MultipartSerializationWriterFactory struct {
 }
 
@@ -39,7 +42,7 @@ func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType
 	}
 
 	mediaType, _, _ := strings.Cut(trimmed, ";")
-	if strings.ToLower(strings.TrimSpace(mediaType)) != validType {
+	if !strings.EqualFold(strings.TrimSpace(mediaType), validType) {
 		return nil, errors.New("contentType is not valid")
 	}
 
