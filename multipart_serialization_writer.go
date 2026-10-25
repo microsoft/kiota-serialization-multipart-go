@@ -12,9 +12,6 @@ import (
 )
 
 // MultipartSerializationWriter implements SerializationWriter for multipart/form-data.
-var _ absser.SerializationWriter = (*MultipartSerializationWriter)(nil)
-
-// MultipartSerializationWriter implements SerializationWriter for multipart/form-data.
 type MultipartSerializationWriter struct {
 	writer                     []byte
 	onBeforeAssignFieldValues  absser.ParsableAction

@@ -8,9 +8,6 @@ import (
 )
 
 // MultipartSerializationWriterFactory implements SerializationWriterFactory for multipart/form-data.
-var _ absser.SerializationWriterFactory = (*MultipartSerializationWriterFactory)(nil)
-
-// MultipartSerializationWriterFactory implements SerializationWriterFactory for multipart/form-data.
 type MultipartSerializationWriterFactory struct {
 }
 
