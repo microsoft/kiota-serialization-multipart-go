@@ -12,6 +12,9 @@ import (
 )
 
 // MultipartSerializationWriter implements SerializationWriter for multipart/form-data.
+var _ absser.SerializationWriter = (*MultipartSerializationWriter)(nil)
+
+// MultipartSerializationWriter implements SerializationWriter for multipart/form-data.
 type MultipartSerializationWriter struct {
 	writer                     []byte
 	onBeforeAssignFieldValues  absser.ParsableAction
@@ -30,6 +33,9 @@ func NewMultipartSerializationWriter() *MultipartSerializationWriter {
 func (w *MultipartSerializationWriter) WriteStringValue(key string, value *string) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if key != "" && value == nil {
+		return nil
 	}
 	if key != "" {
 		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
@@ -217,6 +223,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfInt8Values(key string, c
 func (w *MultipartSerializationWriter) GetSerializedContent() ([]byte, error) {
 	if w == nil {
 		return nil, errors.New("writer cannot be nil")
+	}
+	if w.writer == nil {
+		return make([]byte, 0), nil
 	}
 	return w.writer, nil
 }

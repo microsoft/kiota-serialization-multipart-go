@@ -107,3 +107,67 @@ func TestNilWriterDoesNotPanic(t *testing.T) {
 	assert.Error(t, nilWriter.WriteByteArrayValue("k", []byte{1, 2, 3}))
 	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
 }
+
+func TestMultipartSerializationWriterHonoursInterface(t *testing.T) {
+	instance := NewMultipartSerializationWriter()
+	assert.Implements(t, (*absser.SerializationWriter)(nil), instance)
+}
+
+func TestWriteStringValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "text/plain"
+	err := serializer.WriteStringValue("Content-Type", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "Content-Type: text/plain\r\n", string(content))
+}
+
+func TestWriteStringValueWithNilValueOmitsHeader(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	err := serializer.WriteStringValue("Content-Type", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteStringValueWithEmptyKeyAndNilValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	err := serializer.WriteStringValue("", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "\r\n", string(content))
+}
+
+func TestWriteStringValueWithEmptyKeyAndValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "raw content line"
+	err := serializer.WriteStringValue("", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "raw content line\r\n", string(content))
+}
+
+func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
+	uninitializedWriter := &MultipartSerializationWriter{}
+	content, err := uninitializedWriter.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotNil(t, content)
+	assert.Empty(t, content)
+}
+
