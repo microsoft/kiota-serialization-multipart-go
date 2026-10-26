@@ -51,61 +51,97 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 
 // WriteBoolValue writes a Bool value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteBoolValue(key string, value *bool) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of bool value is not supported with MultipartSerializationWriter")
 }
 
 // WriteByteValue writes a Byte value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteByteValue(key string, value *byte) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of byte value is not supported with MultipartSerializationWriter")
 }
 
 // WriteInt8Value writes a int8 value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteInt8Value(key string, value *int8) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of int8 value is not supported with MultipartSerializationWriter")
 }
 
 // WriteInt32Value writes a Int32 value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteInt32Value(key string, value *int32) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of int32 value is not supported with MultipartSerializationWriter")
 }
 
 // WriteInt64Value writes a Int64 value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteInt64Value(key string, value *int64) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of int64 value is not supported with MultipartSerializationWriter")
 }
 
 // WriteFloat32Value writes a Float32 value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteFloat32Value(key string, value *float32) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of float32 value is not supported with MultipartSerializationWriter")
 }
 
 // WriteFloat64Value writes a Float64 value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteFloat64Value(key string, value *float64) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of float64 value is not supported with MultipartSerializationWriter")
 }
 
 // WriteTimeValue writes a Time value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteTimeValue(key string, value *time.Time) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of time value is not supported with MultipartSerializationWriter")
 }
 
 // WriteISODurationValue writes a ISODuration value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteISODurationValue(key string, value *absser.ISODuration) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of ISODuration value is not supported with MultipartSerializationWriter")
 }
 
 // WriteTimeOnlyValue writes a TimeOnly value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteTimeOnlyValue(key string, value *absser.TimeOnly) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of TimeOnly value is not supported with MultipartSerializationWriter")
 }
 
 // WriteDateOnlyValue writes a DateOnly value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteDateOnlyValue(key string, value *absser.DateOnly) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of DateOnly value is not supported with MultipartSerializationWriter")
 }
 
 // WriteUUIDValue writes a UUID value to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteUUIDValue(key string, value *uuid.UUID) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of UUID value is not supported with MultipartSerializationWriter")
 }
 
@@ -126,13 +162,13 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 		return errors.New("writer cannot be nil")
 	}
 	if item != nil {
+		if _, ok := item.(abstractions.MultipartBody); !ok {
+			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+		}
 		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), item)
 		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), item, w)
 		if err != nil {
 			return err
-		}
-		if _, ok := item.(abstractions.MultipartBody); !ok {
-			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
 		}
 		err = item.Serialize(w)
 		if err != nil {
@@ -145,71 +181,113 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 
 // WriteCollectionOfObjectValues writes a collection of Parsable values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfObjectValues(key string, collection []absser.Parsable) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfStringValues writes a collection of String values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfStringValues(key string, collection []string) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfInt32Values writes a collection of Int32 values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfInt32Values(key string, collection []int32) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfInt64Values writes a collection of Int64 values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfInt64Values(key string, collection []int64) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfFloat32Values writes a collection of Float32 values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfFloat32Values(key string, collection []float32) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfFloat64Values writes a collection of Float64 values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfFloat64Values(key string, collection []float64) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfTimeValues writes a collection of Time values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfTimeValues(key string, collection []time.Time) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfISODurationValues writes a collection of ISODuration values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfISODurationValues(key string, collection []absser.ISODuration) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfTimeOnlyValues writes a collection of TimeOnly values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfTimeOnlyValues(key string, collection []absser.TimeOnly) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfDateOnlyValues writes a collection of DateOnly values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfDateOnlyValues(key string, collection []absser.DateOnly) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfUUIDValues writes a collection of UUID values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfUUIDValues(key string, collection []uuid.UUID) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfBoolValues writes a collection of Bool values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfBoolValues(key string, collection []bool) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfByteValues writes a collection of Byte values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfByteValues(key string, collection []byte) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
 // WriteCollectionOfInt8Values writes a collection of int8 values to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteCollectionOfInt8Values(key string, collection []int8) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -223,11 +301,17 @@ func (w *MultipartSerializationWriter) GetSerializedContent() ([]byte, error) {
 
 // WriteAnyValue an unknown value as a parameter.
 func (w *MultipartSerializationWriter) WriteAnyValue(key string, value interface{}) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of any value is not supported with MultipartSerializationWriter")
 }
 
 // WriteAdditionalData writes additional data to underlying the byte array.
 func (w *MultipartSerializationWriter) WriteAdditionalData(value map[string]interface{}) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of additional data is not supported with MultipartSerializationWriter")
 }
 
@@ -241,6 +325,9 @@ func (w *MultipartSerializationWriter) Close() error {
 }
 
 func (w *MultipartSerializationWriter) WriteNullValue(key string) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	return errors.New("serialization of null value is not supported with MultipartSerializationWriter")
 }
 
