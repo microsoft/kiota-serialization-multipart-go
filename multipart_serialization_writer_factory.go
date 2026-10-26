@@ -18,6 +18,9 @@ func NewMultipartSerializationWriterFactory() *MultipartSerializationWriterFacto
 
 // GetValidContentType returns the valid content type for the SerializationWriterFactoryRegistry
 func (f *MultipartSerializationWriterFactory) GetValidContentType() (string, error) {
+	if f == nil {
+		return "", errors.New("factory cannot be nil")
+	}
 	return "multipart/form-data", nil
 }
 
@@ -36,7 +39,7 @@ func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType
 	}
 
 	mediaType, _, _ := strings.Cut(trimmed, ";")
-	if strings.ToLower(strings.TrimSpace(mediaType)) != validType {
+	if !strings.EqualFold(strings.TrimSpace(mediaType), validType) {
 		return nil, errors.New("contentType is not valid")
 	}
 
