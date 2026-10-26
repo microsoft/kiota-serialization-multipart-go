@@ -125,40 +125,85 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+
+	var bodies []abstractions.MultipartBody
 	if item != nil {
-		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), item)
-		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), item, w)
-		if err != nil {
-			return err
-		}
-		if _, ok := item.(abstractions.MultipartBody); !ok {
+		body, ok := item.(abstractions.MultipartBody)
+		if !ok {
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
 		}
-		err = item.Serialize(w)
-		if err != nil {
-			return err
-		}
-		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), item)
+		bodies = append(bodies, body)
 	}
 	for _, additionalValue := range additionalValuesToMerge {
 		if additionalValue == nil {
 			continue
 		}
-		if _, ok := additionalValue.(abstractions.MultipartBody); !ok {
+		body, ok := additionalValue.(abstractions.MultipartBody)
+		if !ok {
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
 		}
-		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), additionalValue)
-		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), additionalValue, w)
-		if err != nil {
-			return err
-		}
-		err = additionalValue.Serialize(w)
-		if err != nil {
-			return err
-		}
-		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), additionalValue)
+		bodies = append(bodies, body)
 	}
-	return nil
+
+	if len(bodies) == 0 {
+		return nil
+	}
+
+	if len(bodies) == 1 {
+		body := bodies[0]
+		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), body)
+		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), body, w)
+		if err != nil {
+			return err
+		}
+		err = body.Serialize(w)
+		if err != nil {
+			return err
+		}
+		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), body)
+		return nil
+	}
+
+	primaryBoundary := bodies[0].GetBoundary()
+	mergingWriter := &multipartMergingWriter{
+		MultipartSerializationWriter: w,
+		primaryBoundary:              primaryBoundary,
+	}
+	for _, body := range bodies {
+		mergingWriter.currentBoundary = body.GetBoundary()
+		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), body)
+		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), body, mergingWriter)
+		if err != nil {
+			return err
+		}
+		err = body.Serialize(mergingWriter)
+		if err != nil {
+			return err
+		}
+		abstractions.InvokeParsableAction(w.GetOnAfterObjectSerialization(), body)
+	}
+
+	closingBoundary := "--" + primaryBoundary + "--"
+	return w.WriteStringValue("", &closingBoundary)
+}
+
+type multipartMergingWriter struct {
+	*MultipartSerializationWriter
+	currentBoundary string
+	primaryBoundary string
+}
+
+func (m *multipartMergingWriter) WriteStringValue(key string, value *string) error {
+	if key == "" && value != nil {
+		if *value == "--"+m.currentBoundary+"--" {
+			return nil
+		}
+		if *value == "--"+m.currentBoundary {
+			replacement := "--" + m.primaryBoundary
+			return m.MultipartSerializationWriter.WriteStringValue(key, &replacement)
+		}
+	}
+	return m.MultipartSerializationWriter.WriteStringValue(key, value)
 }
 
 // WriteCollectionOfObjectValues writes a collection of Parsable values to underlying the byte array.

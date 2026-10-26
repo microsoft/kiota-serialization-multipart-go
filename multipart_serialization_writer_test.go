@@ -1,6 +1,9 @@
 package multipartserialization
 
 import (
+	"bytes"
+	"io"
+	"mime/multipart"
 	"strings"
 	"testing"
 	"time"
@@ -9,6 +12,7 @@ import (
 	"github.com/microsoft/kiota-serialization-multipart-go/internal"
 
 	assert "github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
 
 	absser "github.com/microsoft/kiota-abstractions-go/serialization"
 	jsonser "github.com/microsoft/kiota-serialization-json-go"
@@ -123,18 +127,94 @@ func TestWriteObjectValueWithAdditionalValuesToMerge(t *testing.T) {
 
 	part1 := abstractions.NewMultipartBody()
 	part1.SetRequestAdapter(mockRequestAdapter)
-	part1.AddOrReplacePart("field1", "application/octet-stream", []byte("hello"))
+	assert.NoError(t, part1.AddOrReplacePart("field1", "application/octet-stream", []byte("hello")))
 
 	part2 := abstractions.NewMultipartBody()
 	part2.SetRequestAdapter(mockRequestAdapter)
-	part2.AddOrReplacePart("field2", "application/octet-stream", []byte("world"))
+	assert.NoError(t, part2.AddOrReplacePart("field2", "application/octet-stream", []byte("world")))
 
 	err := writer.WriteObjectValue("", part1, part2)
 	assert.NoError(t, err)
 
 	content, err := writer.GetSerializedContent()
 	assert.NoError(t, err)
-	str := string(content)
-	assert.Contains(t, str, "field1")
-	assert.Contains(t, str, "field2")
+
+	// Verify using standard MIME multipart reader with primary boundary
+	reader := multipart.NewReader(bytes.NewReader(content), part1.GetBoundary())
+	parsedParts := make(map[string]string)
+	for {
+		p, err := reader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(t, err)
+		body, err := io.ReadAll(p)
+		require.NoError(t, err)
+		parsedParts[p.FormName()] = string(body)
+	}
+
+	assert.Len(t, parsedParts, 2)
+	assert.Equal(t, "hello", parsedParts["field1"])
+	assert.Equal(t, "world", parsedParts["field2"])
+}
+
+func TestWriteObjectValueWithAdditionalValuesEdgeCases(t *testing.T) {
+	mockRequestAdapter := &internal.MockRequestAdapter{
+		SerializationWriterFactory: jsonser.NewJsonSerializationWriterFactory(),
+	}
+
+	t.Run("nil item with additional values", func(t *testing.T) {
+		writer := NewMultipartSerializationWriter()
+		part1 := abstractions.NewMultipartBody()
+		part1.SetRequestAdapter(mockRequestAdapter)
+		assert.NoError(t, part1.AddOrReplacePart("field1", "application/octet-stream", []byte("hello")))
+
+		part2 := abstractions.NewMultipartBody()
+		part2.SetRequestAdapter(mockRequestAdapter)
+		assert.NoError(t, part2.AddOrReplacePart("field2", "application/octet-stream", []byte("world")))
+
+		err := writer.WriteObjectValue("", nil, part1, nil, part2)
+		assert.NoError(t, err)
+
+		content, err := writer.GetSerializedContent()
+		assert.NoError(t, err)
+
+		reader := multipart.NewReader(bytes.NewReader(content), part1.GetBoundary())
+		parsedParts := make(map[string]string)
+		for {
+			p, err := reader.NextPart()
+			if err == io.EOF {
+				break
+			}
+			require.NoError(t, err)
+			body, err := io.ReadAll(p)
+			require.NoError(t, err)
+			parsedParts[p.FormName()] = string(body)
+		}
+
+		assert.Len(t, parsedParts, 2)
+		assert.Equal(t, "hello", parsedParts["field1"])
+		assert.Equal(t, "world", parsedParts["field2"])
+	})
+
+	t.Run("invalid additional value returns error", func(t *testing.T) {
+		writer := NewMultipartSerializationWriter()
+		part1 := abstractions.NewMultipartBody()
+		part1.SetRequestAdapter(mockRequestAdapter)
+		assert.NoError(t, part1.AddOrReplacePart("field1", "application/octet-stream", []byte("hello")))
+
+		err := writer.WriteObjectValue("", part1, internal.NewTestEntity())
+		assert.Error(t, err)
+		assert.Equal(t, "only the serialization of multipart bodies is supported with MultipartSerializationWriter", err.Error())
+	})
+
+	t.Run("empty item and empty additional values", func(t *testing.T) {
+		writer := NewMultipartSerializationWriter()
+		err := writer.WriteObjectValue("", nil, nil)
+		assert.NoError(t, err)
+
+		content, err := writer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Empty(t, content)
+	})
 }
