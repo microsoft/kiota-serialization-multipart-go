@@ -108,66 +108,71 @@ func TestNilWriterDoesNotPanic(t *testing.T) {
 	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
 }
 
-func TestMultipartSerializationWriterHonoursInterface(t *testing.T) {
-	instance := NewMultipartSerializationWriter()
-	assert.Implements(t, (*absser.SerializationWriter)(nil), instance)
-}
 
-func TestWriteStringValue(t *testing.T) {
+func TestWriteObjectValueDoesNotInvokeCallbackOnUnsupportedParsable(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
 	defer serializer.Close()
 
-	val := "text/plain"
-	err := serializer.WriteStringValue("Content-Type", &val)
+	called := false
+	err := serializer.SetOnStartObjectSerialization(func(p absser.Parsable, w absser.SerializationWriter) error {
+		called = true
+		return nil
+	})
 	assert.NoError(t, err)
 
-	content, err := serializer.GetSerializedContent()
-	assert.NoError(t, err)
-	assert.Equal(t, "Content-Type: text/plain\r\n", string(content))
+	err = serializer.WriteObjectValue("key", internal.NewTestEntity())
+	assert.Error(t, err)
+	assert.Equal(t, "only the serialization of multipart bodies is supported with MultipartSerializationWriter", err.Error())
+	assert.False(t, called, "start callback should not be invoked for unsupported Parsable types")
 }
 
-func TestWriteStringValueWithNilValueOmitsHeader(t *testing.T) {
-	serializer := NewMultipartSerializationWriter()
-	defer serializer.Close()
+func TestNilWriterUnsupportedMethodsReturnNilError(t *testing.T) {
+	var nilWriter *MultipartSerializationWriter
 
-	err := serializer.WriteStringValue("Content-Type", nil)
-	assert.NoError(t, err)
+	boolVal := true
+	assert.EqualError(t, nilWriter.WriteBoolValue("k", &boolVal), "writer cannot be nil")
 
-	content, err := serializer.GetSerializedContent()
-	assert.NoError(t, err)
-	assert.Empty(t, content)
+	byteVal := byte(1)
+	assert.EqualError(t, nilWriter.WriteByteValue("k", &byteVal), "writer cannot be nil")
+
+	int8Val := int8(1)
+	assert.EqualError(t, nilWriter.WriteInt8Value("k", &int8Val), "writer cannot be nil")
+
+	int32Val := int32(1)
+	assert.EqualError(t, nilWriter.WriteInt32Value("k", &int32Val), "writer cannot be nil")
+
+	int64Val := int64(1)
+	assert.EqualError(t, nilWriter.WriteInt64Value("k", &int64Val), "writer cannot be nil")
+
+	float32Val := float32(1.0)
+	assert.EqualError(t, nilWriter.WriteFloat32Value("k", &float32Val), "writer cannot be nil")
+
+	float64Val := float64(1.0)
+	assert.EqualError(t, nilWriter.WriteFloat64Value("k", &float64Val), "writer cannot be nil")
+
+	timeVal := time.Now()
+	assert.EqualError(t, nilWriter.WriteTimeValue("k", &timeVal), "writer cannot be nil")
+
+	assert.EqualError(t, nilWriter.WriteISODurationValue("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteTimeOnlyValue("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteDateOnlyValue("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteUUIDValue("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteAnyValue("k", "any"), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteAdditionalData(map[string]interface{}{}), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteNullValue("k"), "writer cannot be nil")
+
+	assert.EqualError(t, nilWriter.WriteCollectionOfObjectValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfStringValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfInt32Values("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfInt64Values("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfFloat32Values("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfFloat64Values("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfTimeValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfISODurationValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfTimeOnlyValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfDateOnlyValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfUUIDValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfBoolValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfByteValues("k", nil), "writer cannot be nil")
+	assert.EqualError(t, nilWriter.WriteCollectionOfInt8Values("k", nil), "writer cannot be nil")
 }
-
-func TestWriteStringValueWithEmptyKeyAndNilValue(t *testing.T) {
-	serializer := NewMultipartSerializationWriter()
-	defer serializer.Close()
-
-	err := serializer.WriteStringValue("", nil)
-	assert.NoError(t, err)
-
-	content, err := serializer.GetSerializedContent()
-	assert.NoError(t, err)
-	assert.Equal(t, "\r\n", string(content))
-}
-
-func TestWriteStringValueWithEmptyKeyAndValue(t *testing.T) {
-	serializer := NewMultipartSerializationWriter()
-	defer serializer.Close()
-
-	val := "raw content line"
-	err := serializer.WriteStringValue("", &val)
-	assert.NoError(t, err)
-
-	content, err := serializer.GetSerializedContent()
-	assert.NoError(t, err)
-	assert.Equal(t, "raw content line\r\n", string(content))
-}
-
-func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
-	uninitializedWriter := &MultipartSerializationWriter{}
-	content, err := uninitializedWriter.GetSerializedContent()
-	assert.NoError(t, err)
-	assert.NotNil(t, content)
-	assert.Empty(t, content)
-}
-
