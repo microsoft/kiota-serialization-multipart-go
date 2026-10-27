@@ -121,6 +121,49 @@ func TestNilWriterCallbacks(t *testing.T) {
 	assert.EqualError(t, nilWriter.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }), "writer cannot be nil")
 }
 
+func TestSerializationCallbackLifecycle(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var executionOrder []string
+
+	beforeAction := func(p absser.Parsable) error {
+		executionOrder = append(executionOrder, "before")
+		assert.NotNil(t, p)
+		return nil
+	}
+	startAction := func(p absser.Parsable, w absser.SerializationWriter) error {
+		executionOrder = append(executionOrder, "start")
+		assert.NotNil(t, p)
+		assert.NotNil(t, w)
+		return nil
+	}
+	afterAction := func(p absser.Parsable) error {
+		executionOrder = append(executionOrder, "after")
+		assert.NotNil(t, p)
+		return nil
+	}
+
+	assert.NoError(t, serializer.SetOnBeforeSerialization(beforeAction))
+	assert.NoError(t, serializer.SetOnStartObjectSerialization(startAction))
+	assert.NoError(t, serializer.SetOnAfterObjectSerialization(afterAction))
+
+	assert.NotNil(t, serializer.GetOnBeforeSerialization())
+	assert.NotNil(t, serializer.GetOnStartObjectSerialization())
+	assert.NotNil(t, serializer.GetOnAfterObjectSerialization())
+
+	body := abstractions.NewMultipartBody()
+	body.SetRequestAdapter(&internal.MockRequestAdapter{
+		SerializationWriterFactory: jsonser.NewJsonSerializationWriterFactory(),
+	})
+	assert.NoError(t, body.AddOrReplacePart("field", "text/plain", "content"))
+
+	err := serializer.WriteObjectValue("body", body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{"before", "start", "after"}, executionOrder)
+}
+
 
 func TestWriteObjectValueDoesNotInvokeCallbackOnUnsupportedParsable(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
