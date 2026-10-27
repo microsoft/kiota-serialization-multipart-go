@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.5](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.4...v1.1.5) (2026-10-27)
+
+
+### Bug Fixes
+
+* **factory:** add nil receiver check to GetValidContentType ([65ff36e](https://github.com/microsoft/kiota-serialization-multipart-go/commit/65ff36e01870558306038278544e4d7d8386e41c))
+* **factory:** add nil receiver check to GetValidContentType ([c9c5163](https://github.com/microsoft/kiota-serialization-multipart-go/commit/c9c516321208acd5638ea91916ee159a93ee3c51))
+* **multipart:** add defensive nil receiver guards to serialization callback methods ([68233da](https://github.com/microsoft/kiota-serialization-multipart-go/commit/68233dace8576e9ecec7951871ec0b5b563c63b4))
+* **multipart:** add nil guards to unsupported methods and validate multipart body before start callback ([1df8d43](https://github.com/microsoft/kiota-serialization-multipart-go/commit/1df8d4357a50847d013be62fb943af4eeaf676ce))
+* **multipart:** add nil guards to unsupported methods and validate multipart body before start callback ([2cf9b02](https://github.com/microsoft/kiota-serialization-multipart-go/commit/2cf9b027f1ad113a5cb9fbccd416265fd6e103d1))
+* **multipart:** guard callback getters and setters against nil pointer dereference ([4db85ef](https://github.com/microsoft/kiota-serialization-multipart-go/commit/4db85efd1a13bd83dfc61156a5ccacffff2a1d2e))
+
 ## [1.1.4](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.3...v1.1.4) (2026-10-21)
 
 
