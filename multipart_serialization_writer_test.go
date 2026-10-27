@@ -1,6 +1,7 @@
 package multipartserialization
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -162,6 +163,48 @@ func TestSerializationCallbackLifecycle(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, []string{"before", "start", "after"}, executionOrder)
+}
+
+func TestSerializationCallbackErrorPropagationAndNilActions(t *testing.T) {
+	t.Run("start callback error propagation aborts serialization", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		afterCalled := false
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(func(p absser.Parsable, w absser.SerializationWriter) error {
+			return errors.New("start hook failed")
+		}))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(func(p absser.Parsable) error {
+			afterCalled = true
+			return nil
+		}))
+
+		body := abstractions.NewMultipartBody()
+		err := serializer.WriteObjectValue("body", body)
+		assert.EqualError(t, err, "start hook failed")
+		assert.False(t, afterCalled, "after callback should not be invoked when start callback fails")
+	})
+
+	t.Run("nil callback actions can be set and clear previous handlers", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		assert.NoError(t, serializer.SetOnBeforeSerialization(func(absser.Parsable) error { return nil }))
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(func(absser.Parsable) error { return nil }))
+
+		assert.NotNil(t, serializer.GetOnBeforeSerialization())
+		assert.NotNil(t, serializer.GetOnStartObjectSerialization())
+		assert.NotNil(t, serializer.GetOnAfterObjectSerialization())
+
+		assert.NoError(t, serializer.SetOnBeforeSerialization(nil))
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(nil))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(nil))
+
+		assert.Nil(t, serializer.GetOnBeforeSerialization())
+		assert.Nil(t, serializer.GetOnStartObjectSerialization())
+		assert.Nil(t, serializer.GetOnAfterObjectSerialization())
+	})
 }
 
 
