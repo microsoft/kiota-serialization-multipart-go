@@ -1,6 +1,7 @@
 package multipartserialization
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -106,6 +107,104 @@ func TestNilWriterDoesNotPanic(t *testing.T) {
 	assert.Error(t, nilWriter.WriteStringValue("k", &val))
 	assert.Error(t, nilWriter.WriteByteArrayValue("k", []byte{1, 2, 3}))
 	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
+}
+
+func TestNilWriterCallbacks(t *testing.T) {
+	var nilWriter *MultipartSerializationWriter
+
+	assert.Nil(t, nilWriter.GetOnBeforeSerialization())
+	assert.EqualError(t, nilWriter.SetOnBeforeSerialization(func(absser.Parsable) error { return nil }), "writer cannot be nil")
+
+	assert.Nil(t, nilWriter.GetOnAfterObjectSerialization())
+	assert.EqualError(t, nilWriter.SetOnAfterObjectSerialization(func(absser.Parsable) error { return nil }), "writer cannot be nil")
+
+	assert.Nil(t, nilWriter.GetOnStartObjectSerialization())
+	assert.EqualError(t, nilWriter.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }), "writer cannot be nil")
+}
+
+func TestSerializationCallbackLifecycle(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var executionOrder []string
+
+	beforeAction := func(p absser.Parsable) error {
+		executionOrder = append(executionOrder, "before")
+		assert.NotNil(t, p)
+		return nil
+	}
+	startAction := func(p absser.Parsable, w absser.SerializationWriter) error {
+		executionOrder = append(executionOrder, "start")
+		assert.NotNil(t, p)
+		assert.NotNil(t, w)
+		return nil
+	}
+	afterAction := func(p absser.Parsable) error {
+		executionOrder = append(executionOrder, "after")
+		assert.NotNil(t, p)
+		return nil
+	}
+
+	assert.NoError(t, serializer.SetOnBeforeSerialization(beforeAction))
+	assert.NoError(t, serializer.SetOnStartObjectSerialization(startAction))
+	assert.NoError(t, serializer.SetOnAfterObjectSerialization(afterAction))
+
+	assert.NotNil(t, serializer.GetOnBeforeSerialization())
+	assert.NotNil(t, serializer.GetOnStartObjectSerialization())
+	assert.NotNil(t, serializer.GetOnAfterObjectSerialization())
+
+	body := abstractions.NewMultipartBody()
+	body.SetRequestAdapter(&internal.MockRequestAdapter{
+		SerializationWriterFactory: jsonser.NewJsonSerializationWriterFactory(),
+	})
+	assert.NoError(t, body.AddOrReplacePart("field", "text/plain", "content"))
+
+	err := serializer.WriteObjectValue("body", body)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{"before", "start", "after"}, executionOrder)
+}
+
+func TestSerializationCallbackErrorPropagationAndNilActions(t *testing.T) {
+	t.Run("start callback error propagation aborts serialization", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		afterCalled := false
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(func(p absser.Parsable, w absser.SerializationWriter) error {
+			return errors.New("start hook failed")
+		}))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(func(p absser.Parsable) error {
+			afterCalled = true
+			return nil
+		}))
+
+		body := abstractions.NewMultipartBody()
+		err := serializer.WriteObjectValue("body", body)
+		assert.EqualError(t, err, "start hook failed")
+		assert.False(t, afterCalled, "after callback should not be invoked when start callback fails")
+	})
+
+	t.Run("nil callback actions can be set and clear previous handlers", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		assert.NoError(t, serializer.SetOnBeforeSerialization(func(absser.Parsable) error { return nil }))
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(func(absser.Parsable) error { return nil }))
+
+		assert.NotNil(t, serializer.GetOnBeforeSerialization())
+		assert.NotNil(t, serializer.GetOnStartObjectSerialization())
+		assert.NotNil(t, serializer.GetOnAfterObjectSerialization())
+
+		assert.NoError(t, serializer.SetOnBeforeSerialization(nil))
+		assert.NoError(t, serializer.SetOnStartObjectSerialization(nil))
+		assert.NoError(t, serializer.SetOnAfterObjectSerialization(nil))
+
+		assert.Nil(t, serializer.GetOnBeforeSerialization())
+		assert.Nil(t, serializer.GetOnStartObjectSerialization())
+		assert.Nil(t, serializer.GetOnAfterObjectSerialization())
+	})
 }
 
 

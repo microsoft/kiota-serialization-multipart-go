@@ -332,28 +332,46 @@ func (w *MultipartSerializationWriter) WriteNullValue(key string) error {
 }
 
 func (w *MultipartSerializationWriter) GetOnBeforeSerialization() absser.ParsableAction {
+	if w == nil {
+		return nil
+	}
 	return w.onBeforeAssignFieldValues
 }
 
 func (w *MultipartSerializationWriter) SetOnBeforeSerialization(action absser.ParsableAction) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onBeforeAssignFieldValues = action
 	return nil
 }
 
 func (w *MultipartSerializationWriter) GetOnAfterObjectSerialization() absser.ParsableAction {
+	if w == nil {
+		return nil
+	}
 	return w.onAfterAssignFieldValues
 }
 
 func (w *MultipartSerializationWriter) SetOnAfterObjectSerialization(action absser.ParsableAction) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onAfterAssignFieldValues = action
 	return nil
 }
 
 func (w *MultipartSerializationWriter) GetOnStartObjectSerialization() absser.ParsableWriter {
+	if w == nil {
+		return nil
+	}
 	return w.onStartObjectSerialization
 }
 
 func (w *MultipartSerializationWriter) SetOnStartObjectSerialization(writer absser.ParsableWriter) error {
+	if w == nil {
+		return errors.New("writer cannot be nil")
+	}
 	w.onStartObjectSerialization = writer
 	return nil
 }
