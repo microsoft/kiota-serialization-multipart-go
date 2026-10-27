@@ -108,6 +108,19 @@ func TestNilWriterDoesNotPanic(t *testing.T) {
 	assert.Error(t, nilWriter.WriteObjectValue("k", nil))
 }
 
+func TestNilWriterCallbacks(t *testing.T) {
+	var nilWriter *MultipartSerializationWriter
+
+	assert.Nil(t, nilWriter.GetOnBeforeSerialization())
+	assert.EqualError(t, nilWriter.SetOnBeforeSerialization(func(absser.Parsable) error { return nil }), "writer cannot be nil")
+
+	assert.Nil(t, nilWriter.GetOnAfterObjectSerialization())
+	assert.EqualError(t, nilWriter.SetOnAfterObjectSerialization(func(absser.Parsable) error { return nil }), "writer cannot be nil")
+
+	assert.Nil(t, nilWriter.GetOnStartObjectSerialization())
+	assert.EqualError(t, nilWriter.SetOnStartObjectSerialization(func(absser.Parsable, absser.SerializationWriter) error { return nil }), "writer cannot be nil")
+}
+
 
 func TestWriteObjectValueDoesNotInvokeCallbackOnUnsupportedParsable(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
