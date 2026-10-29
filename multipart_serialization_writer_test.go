@@ -206,8 +206,6 @@ func TestSerializationCallbackErrorPropagationAndNilActions(t *testing.T) {
 		assert.Nil(t, serializer.GetOnAfterObjectSerialization())
 	})
 }
-
-
 func TestWriteObjectValueDoesNotInvokeCallbackOnUnsupportedParsable(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
 	defer serializer.Close()
@@ -274,4 +272,86 @@ func TestNilWriterUnsupportedMethodsReturnNilError(t *testing.T) {
 	assert.EqualError(t, nilWriter.WriteCollectionOfBoolValues("k", nil), "writer cannot be nil")
 	assert.EqualError(t, nilWriter.WriteCollectionOfByteValues("k", nil), "writer cannot be nil")
 	assert.EqualError(t, nilWriter.WriteCollectionOfInt8Values("k", nil), "writer cannot be nil")
+}
+
+func TestMultipartSerializationWriterHonoursInterface(t *testing.T) {
+	instance := NewMultipartSerializationWriter()
+	assert.Implements(t, (*absser.SerializationWriter)(nil), instance)
+}
+
+func TestWriteStringValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "text/plain"
+	err := serializer.WriteStringValue("Content-Type", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "Content-Type: text/plain\r\n", string(content))
+}
+
+func TestWriteStringValueWithNilValueOmitsHeader(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Named header with nil value should leave the buffer unchanged
+	err := serializer.WriteStringValue("Content-Type", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotNil(t, content)
+	assert.Equal(t, 0, len(content))
+
+	// Pre-populated buffer remains unchanged when a named header with nil value is written
+	initialVal := "form-data; name=\"file\""
+	err = serializer.WriteStringValue("Content-Disposition", &initialVal)
+	assert.NoError(t, err)
+
+	contentBefore, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+
+	err = serializer.WriteStringValue("Content-Type", nil)
+	assert.NoError(t, err)
+
+	contentAfter, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, contentBefore, contentAfter)
+}
+
+func TestWriteStringValueWithEmptyKeyAndNilValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Empty key with nil value emits exactly "\r\n" to separate headers and body
+	err := serializer.WriteStringValue("", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "\r\n", string(content))
+}
+
+func TestWriteStringValueWithEmptyKeyAndValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "raw content line"
+	err := serializer.WriteStringValue("", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "raw content line\r\n", string(content))
+}
+
+func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
+	uninitializedWriter := &MultipartSerializationWriter{}
+	content, err := uninitializedWriter.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotNil(t, content)
+	assert.Equal(t, 0, len(content))
+	assert.Empty(t, content)
 }
