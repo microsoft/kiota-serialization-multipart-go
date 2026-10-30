@@ -2,6 +2,7 @@ package multipartserialization
 
 import (
 	"errors"
+	"reflect"
 	"time"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
@@ -157,11 +158,23 @@ func (w *MultipartSerializationWriter) WriteByteArrayValue(key string, value []b
 }
 
 // WriteObjectValue writes a Parsable value to underlying the byte array.
+func isNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	val := reflect.ValueOf(i)
+	switch val.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice, reflect.Interface:
+		return val.IsNil()
+	}
+	return false
+}
+
 func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.Parsable, additionalValuesToMerge ...absser.Parsable) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
-	if item != nil {
+	if item != nil && !isNil(item) {
 		if _, ok := item.(abstractions.MultipartBody); !ok {
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
 		}

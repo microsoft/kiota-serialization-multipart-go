@@ -275,3 +275,35 @@ func TestNilWriterUnsupportedMethodsReturnNilError(t *testing.T) {
 	assert.EqualError(t, nilWriter.WriteCollectionOfByteValues("k", nil), "writer cannot be nil")
 	assert.EqualError(t, nilWriter.WriteCollectionOfInt8Values("k", nil), "writer cannot be nil")
 }
+
+type mockTypedNilMultipartBody struct {
+	abstractions.MultipartBody
+}
+
+func TestWriteObjectValueWithTypedNilBodyDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var nilBody *mockTypedNilMultipartBody
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", nilBody)
+		assert.NoError(t, err)
+	})
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteObjectValueWithTypedNilEntityDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var nilEntity *internal.TestEntity
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", nilEntity)
+		assert.NoError(t, err)
+	})
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
