@@ -307,3 +307,23 @@ func TestWriteObjectValueWithTypedNilEntityDoesNotPanic(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, content)
 }
+
+type mockEmptyBoundaryMultipartBody struct {
+	abstractions.MultipartBody
+}
+
+func (m *mockEmptyBoundaryMultipartBody) GetBoundary() string {
+	return ""
+}
+
+func TestWriteObjectValueWithEmptyBoundaryReturnsError(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	body := &mockEmptyBoundaryMultipartBody{
+		MultipartBody: abstractions.NewMultipartBody(),
+	}
+	err := serializer.WriteObjectValue("key", body)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "multipart body boundary cannot be empty")
+}

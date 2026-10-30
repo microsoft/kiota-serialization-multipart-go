@@ -175,8 +175,12 @@ func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.
 		return errors.New("writer cannot be nil")
 	}
 	if item != nil && !isNil(item) {
-		if _, ok := item.(abstractions.MultipartBody); !ok {
+		body, ok := item.(abstractions.MultipartBody)
+		if !ok {
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+		}
+		if body.GetBoundary() == "" {
+			return errors.New("multipart body boundary cannot be empty")
 		}
 		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), item)
 		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), item, w)
