@@ -327,3 +327,69 @@ func TestWriteObjectValueWithEmptyBoundaryReturnsError(t *testing.T) {
 	assert.Error(t, err)
 	assert.EqualError(t, err, "multipart body boundary cannot be empty")
 }
+
+type mockArrayParsable [3]int
+
+func (m mockArrayParsable) GetFieldDeserializers() map[string]func(absser.ParseNode) error {
+	return nil
+}
+func (m mockArrayParsable) Serialize(writer absser.SerializationWriter) error {
+	return nil
+}
+
+func TestWriteObjectValueWithArrayParsableDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var arr mockArrayParsable
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", arr)
+		assert.Error(t, err)
+		assert.EqualError(t, err, "only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+	})
+}
+
+func TestWriteAdditionalDataWithEmptyAndNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil map should safely succeed without error
+	err := serializer.WriteAdditionalData(nil)
+	assert.NoError(t, err)
+
+	// Empty map should safely succeed without error
+	err = serializer.WriteAdditionalData(map[string]interface{}{})
+	assert.NoError(t, err)
+
+	// Non-empty map should return unsupported error
+	err = serializer.WriteAdditionalData(map[string]interface{}{"key": "value"})
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of additional data is not supported with MultipartSerializationWriter")
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteAnyValueWithNilAndNonNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil value should safely succeed without error
+	err := serializer.WriteAnyValue("key", nil)
+	assert.NoError(t, err)
+
+	// Non-nil string should return unsupported error
+	err = serializer.WriteAnyValue("key", "test")
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of any value is not supported with MultipartSerializationWriter")
+
+	// Non-nil number should return unsupported error
+	err = serializer.WriteAnyValue("key", 123)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of any value is not supported with MultipartSerializationWriter")
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
