@@ -310,6 +310,9 @@ func (w *MultipartSerializationWriter) WriteAnyValue(key string, value interface
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of any value is not supported with MultipartSerializationWriter")
 }
 
@@ -317,6 +320,9 @@ func (w *MultipartSerializationWriter) WriteAnyValue(key string, value interface
 func (w *MultipartSerializationWriter) WriteAdditionalData(value map[string]interface{}) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(value) == 0 {
+		return nil
 	}
 	return errors.New("serialization of additional data is not supported with MultipartSerializationWriter")
 }

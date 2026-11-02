@@ -353,5 +353,49 @@ func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, content)
 	assert.Equal(t, 0, len(content))
+}
+
+func TestWriteAdditionalDataWithEmptyAndNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil map should safely succeed without error
+	err := serializer.WriteAdditionalData(nil)
+	assert.NoError(t, err)
+
+	// Empty map should safely succeed without error
+	err = serializer.WriteAdditionalData(map[string]interface{}{})
+	assert.NoError(t, err)
+
+	// Non-empty map should return unsupported error
+	err = serializer.WriteAdditionalData(map[string]interface{}{"key": "value"})
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of additional data is not supported with MultipartSerializationWriter")
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteAnyValueWithNilAndNonNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil value should safely succeed without error
+	err := serializer.WriteAnyValue("key", nil)
+	assert.NoError(t, err)
+
+	// Non-nil string should return unsupported error
+	err = serializer.WriteAnyValue("key", "test")
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of any value is not supported with MultipartSerializationWriter")
+
+	// Non-nil number should return unsupported error
+	err = serializer.WriteAnyValue("key", 123)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "serialization of any value is not supported with MultipartSerializationWriter")
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
 	assert.Empty(t, content)
 }
