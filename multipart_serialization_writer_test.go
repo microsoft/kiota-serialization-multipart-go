@@ -13,6 +13,8 @@ import (
 
 	absser "github.com/microsoft/kiota-abstractions-go/serialization"
 	jsonser "github.com/microsoft/kiota-serialization-json-go"
+
+	"github.com/google/uuid"
 )
 
 func TestItReturnsAnErrorOnParsable(t *testing.T) {
@@ -392,4 +394,102 @@ func TestWriteAnyValueWithNilAndNonNilValues(t *testing.T) {
 	content, err := serializer.GetSerializedContent()
 	assert.NoError(t, err)
 	assert.Empty(t, content)
+}
+
+func TestWriteStringValueWithNilAndNonNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil string values with or without key should be safe no-ops
+	err := serializer.WriteStringValue("key", nil)
+	assert.NoError(t, err)
+
+	err = serializer.WriteStringValue("", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content, "must not emit key or newlines for nil string value")
+
+	// Non-nil string values should serialize properly
+	headerVal := "application/json"
+	err = serializer.WriteStringValue("Content-Type", &headerVal)
+	assert.NoError(t, err)
+
+	boundaryVal := "--boundary"
+	err = serializer.WriteStringValue("", &boundaryVal)
+	assert.NoError(t, err)
+
+	emptyVal := ""
+	err = serializer.WriteStringValue("", &emptyVal)
+	assert.NoError(t, err)
+
+	content, err = serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "Content-Type: application/json\r\n--boundary\r\n\r\n", string(content))
+}
+
+func TestScalarWriteMethodsWithNilValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// All scalar write methods with nil value should safely succeed as no-op
+	assert.NoError(t, serializer.WriteBoolValue("key", nil))
+	assert.NoError(t, serializer.WriteByteValue("key", nil))
+	assert.NoError(t, serializer.WriteInt8Value("key", nil))
+	assert.NoError(t, serializer.WriteInt32Value("key", nil))
+	assert.NoError(t, serializer.WriteInt64Value("key", nil))
+	assert.NoError(t, serializer.WriteFloat32Value("key", nil))
+	assert.NoError(t, serializer.WriteFloat64Value("key", nil))
+	assert.NoError(t, serializer.WriteTimeValue("key", nil))
+	assert.NoError(t, serializer.WriteISODurationValue("key", nil))
+	assert.NoError(t, serializer.WriteTimeOnlyValue("key", nil))
+	assert.NoError(t, serializer.WriteDateOnlyValue("key", nil))
+	assert.NoError(t, serializer.WriteUUIDValue("key", nil))
+	assert.NoError(t, serializer.WriteNullValue("key"))
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content, "buffer must remain empty when nil scalar values are written")
+}
+
+func TestScalarWriteMethodsWithNonNilValuesReturnUnsupportedError(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	boolVal := true
+	assert.EqualError(t, serializer.WriteBoolValue("k", &boolVal), "serialization of bool value is not supported with MultipartSerializationWriter")
+
+	byteVal := byte(1)
+	assert.EqualError(t, serializer.WriteByteValue("k", &byteVal), "serialization of byte value is not supported with MultipartSerializationWriter")
+
+	int8Val := int8(1)
+	assert.EqualError(t, serializer.WriteInt8Value("k", &int8Val), "serialization of int8 value is not supported with MultipartSerializationWriter")
+
+	int32Val := int32(1)
+	assert.EqualError(t, serializer.WriteInt32Value("k", &int32Val), "serialization of int32 value is not supported with MultipartSerializationWriter")
+
+	int64Val := int64(1)
+	assert.EqualError(t, serializer.WriteInt64Value("k", &int64Val), "serialization of int64 value is not supported with MultipartSerializationWriter")
+
+	float32Val := float32(1.0)
+	assert.EqualError(t, serializer.WriteFloat32Value("k", &float32Val), "serialization of float32 value is not supported with MultipartSerializationWriter")
+
+	float64Val := float64(1.0)
+	assert.EqualError(t, serializer.WriteFloat64Value("k", &float64Val), "serialization of float64 value is not supported with MultipartSerializationWriter")
+
+	timeVal := time.Now()
+	assert.EqualError(t, serializer.WriteTimeValue("k", &timeVal), "serialization of time value is not supported with MultipartSerializationWriter")
+
+	isoVal := absser.NewDuration(1, 0, 0, 0, 0, 0, 0)
+	assert.EqualError(t, serializer.WriteISODurationValue("k", isoVal), "serialization of ISODuration value is not supported with MultipartSerializationWriter")
+
+	timeOnlyVal := absser.NewTimeOnly(time.Now())
+	assert.EqualError(t, serializer.WriteTimeOnlyValue("k", timeOnlyVal), "serialization of TimeOnly value is not supported with MultipartSerializationWriter")
+
+	dateOnlyVal := absser.NewDateOnly(time.Now())
+	assert.EqualError(t, serializer.WriteDateOnlyValue("k", dateOnlyVal), "serialization of DateOnly value is not supported with MultipartSerializationWriter")
+
+	uuidVal := uuid.New()
+	assert.EqualError(t, serializer.WriteUUIDValue("k", &uuidVal), "serialization of UUID value is not supported with MultipartSerializationWriter")
 }
