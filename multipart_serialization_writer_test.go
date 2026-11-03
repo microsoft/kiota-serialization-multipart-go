@@ -209,7 +209,6 @@ func TestSerializationCallbackErrorPropagationAndNilActions(t *testing.T) {
 	})
 }
 
-
 func TestWriteObjectValueDoesNotInvokeCallbackOnUnsupportedParsable(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
 	defer serializer.Close()
@@ -351,6 +350,74 @@ func TestWriteObjectValueWithArrayParsableDoesNotPanic(t *testing.T) {
 	})
 }
 
+func TestMultipartSerializationWriterHonoursInterface(t *testing.T) {
+	instance := NewMultipartSerializationWriter()
+	assert.Implements(t, (*absser.SerializationWriter)(nil), instance)
+}
+
+func TestWriteStringValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "text/plain"
+	err := serializer.WriteStringValue("Content-Type", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "Content-Type: text/plain\r\n", string(content))
+}
+
+func TestWriteStringValueWithNilValueOmitsHeader(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Named header with nil value should leave the buffer unchanged
+	err := serializer.WriteStringValue("Content-Type", nil)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotNil(t, content)
+	assert.Equal(t, 0, len(content))
+
+	// Pre-populated buffer remains unchanged when a named header with nil value is written
+	initialVal := "form-data; name=\"file\""
+	err = serializer.WriteStringValue("Content-Disposition", &initialVal)
+	assert.NoError(t, err)
+
+	contentBefore, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+
+	err = serializer.WriteStringValue("Content-Type", nil)
+	assert.NoError(t, err)
+
+	contentAfter, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, contentBefore, contentAfter)
+}
+
+func TestWriteStringValueWithEmptyKeyAndValue(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "raw content line"
+	err := serializer.WriteStringValue("", &val)
+	assert.NoError(t, err)
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, "raw content line\r\n", string(content))
+}
+
+func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
+	uninitializedWriter := &MultipartSerializationWriter{}
+	content, err := uninitializedWriter.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotNil(t, content)
+	assert.Equal(t, 0, len(content))
+}
+
 func TestWriteAdditionalDataWithEmptyAndNilValues(t *testing.T) {
 	serializer := NewMultipartSerializationWriter()
 	defer serializer.Close()
@@ -394,6 +461,97 @@ func TestWriteAnyValueWithNilAndNonNilValues(t *testing.T) {
 	content, err := serializer.GetSerializedContent()
 	assert.NoError(t, err)
 	assert.Empty(t, content)
+}
+
+func TestWriteCollectionMethodsWithNilAndEmptyValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	// Nil collections should safely succeed without error
+	assert.NoError(t, serializer.WriteCollectionOfObjectValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfStringValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfInt32Values("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfInt64Values("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfFloat32Values("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfFloat64Values("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfTimeValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfISODurationValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfTimeOnlyValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfDateOnlyValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfUUIDValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfBoolValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfByteValues("key", nil))
+	assert.NoError(t, serializer.WriteCollectionOfInt8Values("key", nil))
+
+	// Empty collections should safely succeed without error
+	assert.NoError(t, serializer.WriteCollectionOfObjectValues("key", []absser.Parsable{}))
+	assert.NoError(t, serializer.WriteCollectionOfStringValues("key", []string{}))
+	assert.NoError(t, serializer.WriteCollectionOfInt32Values("key", []int32{}))
+	assert.NoError(t, serializer.WriteCollectionOfInt64Values("key", []int64{}))
+	assert.NoError(t, serializer.WriteCollectionOfFloat32Values("key", []float32{}))
+	assert.NoError(t, serializer.WriteCollectionOfFloat64Values("key", []float64{}))
+	assert.NoError(t, serializer.WriteCollectionOfTimeValues("key", []time.Time{}))
+	assert.NoError(t, serializer.WriteCollectionOfISODurationValues("key", []absser.ISODuration{}))
+	assert.NoError(t, serializer.WriteCollectionOfTimeOnlyValues("key", []absser.TimeOnly{}))
+	assert.NoError(t, serializer.WriteCollectionOfDateOnlyValues("key", []absser.DateOnly{}))
+	assert.NoError(t, serializer.WriteCollectionOfUUIDValues("key", []uuid.UUID{}))
+	assert.NoError(t, serializer.WriteCollectionOfBoolValues("key", []bool{}))
+	assert.NoError(t, serializer.WriteCollectionOfByteValues("key", []byte{}))
+	assert.NoError(t, serializer.WriteCollectionOfInt8Values("key", []int8{}))
+
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteCollectionMethodsWithNonEmptyValues(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	expectedErr := "collections serialization is not supported with MultipartSerializationWriter"
+
+	// Non-empty collections should return the unsupported error
+	err := serializer.WriteCollectionOfObjectValues("key", []absser.Parsable{internal.NewTestEntity()})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfStringValues("key", []string{"value"})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfInt32Values("key", []int32{42})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfInt64Values("key", []int64{100})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfFloat32Values("key", []float32{3.14})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfFloat64Values("key", []float64{2.718})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfTimeValues("key", []time.Time{time.Now()})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfISODurationValues("key", []absser.ISODuration{{}})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfTimeOnlyValues("key", []absser.TimeOnly{*absser.NewTimeOnly(time.Now())})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfDateOnlyValues("key", []absser.DateOnly{*absser.NewDateOnly(time.Now())})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfUUIDValues("key", []uuid.UUID{uuid.New()})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfBoolValues("key", []bool{true})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfByteValues("key", []byte{0x01})
+	assert.EqualError(t, err, expectedErr)
+
+	err = serializer.WriteCollectionOfInt8Values("key", []int8{8})
+	assert.EqualError(t, err, expectedErr)
 }
 
 func TestWriteStringValueWithNilAndNonNilValues(t *testing.T) {
