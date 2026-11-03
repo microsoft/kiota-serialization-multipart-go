@@ -373,6 +373,9 @@ func (w *MultipartSerializationWriter) GetSerializedContent() ([]byte, error) {
 	if w == nil {
 		return nil, errors.New("writer cannot be nil")
 	}
+	if w.writer == nil {
+		return make([]byte, 0), nil
+	}
 	return w.writer, nil
 }
 
