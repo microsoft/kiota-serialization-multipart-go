@@ -31,23 +31,19 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
-	if key != "" && value == nil {
+	if value == nil {
 		return nil
 	}
 	if key != "" {
 		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
 			return err
 		}
-	}
-	if value != nil {
-		if key != "" {
-			if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
-				return err
-			}
-		}
-		if err := w.WriteByteArrayValue("", []byte(*value)); err != nil {
+		if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
 			return err
 		}
+	}
+	if err := w.WriteByteArrayValue("", []byte(*value)); err != nil {
+		return err
 	}
 	return w.WriteByteArrayValue("", []byte("\r\n"))
 }
@@ -57,6 +53,9 @@ func (w *MultipartSerializationWriter) WriteBoolValue(key string, value *bool) e
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of bool value is not supported with MultipartSerializationWriter")
 }
 
@@ -64,6 +63,9 @@ func (w *MultipartSerializationWriter) WriteBoolValue(key string, value *bool) e
 func (w *MultipartSerializationWriter) WriteByteValue(key string, value *byte) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of byte value is not supported with MultipartSerializationWriter")
 }
@@ -73,6 +75,9 @@ func (w *MultipartSerializationWriter) WriteInt8Value(key string, value *int8) e
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of int8 value is not supported with MultipartSerializationWriter")
 }
 
@@ -80,6 +85,9 @@ func (w *MultipartSerializationWriter) WriteInt8Value(key string, value *int8) e
 func (w *MultipartSerializationWriter) WriteInt32Value(key string, value *int32) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of int32 value is not supported with MultipartSerializationWriter")
 }
@@ -89,6 +97,9 @@ func (w *MultipartSerializationWriter) WriteInt64Value(key string, value *int64)
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of int64 value is not supported with MultipartSerializationWriter")
 }
 
@@ -96,6 +107,9 @@ func (w *MultipartSerializationWriter) WriteInt64Value(key string, value *int64)
 func (w *MultipartSerializationWriter) WriteFloat32Value(key string, value *float32) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of float32 value is not supported with MultipartSerializationWriter")
 }
@@ -105,6 +119,9 @@ func (w *MultipartSerializationWriter) WriteFloat64Value(key string, value *floa
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of float64 value is not supported with MultipartSerializationWriter")
 }
 
@@ -112,6 +129,9 @@ func (w *MultipartSerializationWriter) WriteFloat64Value(key string, value *floa
 func (w *MultipartSerializationWriter) WriteTimeValue(key string, value *time.Time) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of time value is not supported with MultipartSerializationWriter")
 }
@@ -121,6 +141,9 @@ func (w *MultipartSerializationWriter) WriteISODurationValue(key string, value *
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of ISODuration value is not supported with MultipartSerializationWriter")
 }
 
@@ -128,6 +151,9 @@ func (w *MultipartSerializationWriter) WriteISODurationValue(key string, value *
 func (w *MultipartSerializationWriter) WriteTimeOnlyValue(key string, value *absser.TimeOnly) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of TimeOnly value is not supported with MultipartSerializationWriter")
 }
@@ -137,6 +163,9 @@ func (w *MultipartSerializationWriter) WriteDateOnlyValue(key string, value *abs
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if value == nil {
+		return nil
+	}
 	return errors.New("serialization of DateOnly value is not supported with MultipartSerializationWriter")
 }
 
@@ -144,6 +173,9 @@ func (w *MultipartSerializationWriter) WriteDateOnlyValue(key string, value *abs
 func (w *MultipartSerializationWriter) WriteUUIDValue(key string, value *uuid.UUID) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if value == nil {
+		return nil
 	}
 	return errors.New("serialization of UUID value is not supported with MultipartSerializationWriter")
 }
@@ -340,7 +372,7 @@ func (w *MultipartSerializationWriter) WriteNullValue(key string) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
-	return errors.New("serialization of null value is not supported with MultipartSerializationWriter")
+	return nil
 }
 
 func (w *MultipartSerializationWriter) GetOnBeforeSerialization() absser.ParsableAction {
