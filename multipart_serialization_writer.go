@@ -219,6 +219,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfObjectValues(key string,
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -226,6 +229,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfObjectValues(key string,
 func (w *MultipartSerializationWriter) WriteCollectionOfStringValues(key string, collection []string) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -235,6 +241,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfInt32Values(key string, 
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -242,6 +251,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfInt32Values(key string, 
 func (w *MultipartSerializationWriter) WriteCollectionOfInt64Values(key string, collection []int64) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -251,6 +263,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfFloat32Values(key string
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -258,6 +273,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfFloat32Values(key string
 func (w *MultipartSerializationWriter) WriteCollectionOfFloat64Values(key string, collection []float64) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -267,6 +285,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfTimeValues(key string, c
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -274,6 +295,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfTimeValues(key string, c
 func (w *MultipartSerializationWriter) WriteCollectionOfISODurationValues(key string, collection []absser.ISODuration) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -283,6 +307,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfTimeOnlyValues(key strin
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -290,6 +317,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfTimeOnlyValues(key strin
 func (w *MultipartSerializationWriter) WriteCollectionOfDateOnlyValues(key string, collection []absser.DateOnly) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -299,6 +329,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfUUIDValues(key string, c
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -306,6 +339,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfUUIDValues(key string, c
 func (w *MultipartSerializationWriter) WriteCollectionOfBoolValues(key string, collection []bool) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
@@ -315,6 +351,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfByteValues(key string, c
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
+	if len(collection) == 0 {
+		return nil
+	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
 
@@ -322,6 +361,9 @@ func (w *MultipartSerializationWriter) WriteCollectionOfByteValues(key string, c
 func (w *MultipartSerializationWriter) WriteCollectionOfInt8Values(key string, collection []int8) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
+	}
+	if len(collection) == 0 {
+		return nil
 	}
 	return errors.New("collections serialization is not supported with MultipartSerializationWriter")
 }
