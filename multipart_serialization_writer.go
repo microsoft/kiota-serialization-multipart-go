@@ -373,10 +373,12 @@ func (w *MultipartSerializationWriter) GetSerializedContent() ([]byte, error) {
 	if w == nil {
 		return nil, errors.New("writer cannot be nil")
 	}
-	if w.writer == nil {
+	if len(w.writer) == 0 {
 		return make([]byte, 0), nil
 	}
-	return w.writer, nil
+	clone := make([]byte, len(w.writer))
+	copy(clone, w.writer)
+	return clone, nil
 }
 
 // WriteAnyValue an unknown value as a parameter.
