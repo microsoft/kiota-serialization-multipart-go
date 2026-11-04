@@ -578,3 +578,96 @@ func TestScalarWriteMethodsWithNonNilValuesReturnUnsupportedError(t *testing.T) 
 	uuidVal := uuid.New()
 	assert.EqualError(t, serializer.WriteUUIDValue("k", &uuidVal), "serialization of UUID value is not supported with MultipartSerializationWriter")
 }
+
+func TestGetSerializedContentReturnsDefensiveCopy(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	headerVal := "text/plain"
+	assert.NoError(t, serializer.WriteStringValue("Content-Type", &headerVal))
+	assert.NoError(t, serializer.WriteByteArrayValue("", []byte("payload content")))
+
+	c1, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, c1)
+
+	originalBytes := make([]byte, len(c1))
+	copy(originalBytes, c1)
+
+	// Mutate the returned slice
+	c1[0] = 'X'
+	c1[len(c1)-1] = 'Z'
+
+	c2, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, originalBytes, c2, "internal buffer must not be mutated via returned slice")
+	assert.NotEqual(t, c1[0], c2[0])
+	assert.NotEqual(t, c1[len(c1)-1], c2[len(c2)-1])
+}
+
+func TestGetSerializedContentIsolationAcrossMultipleCalls(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	val := "boundary-sample"
+	assert.NoError(t, serializer.WriteStringValue("", &val))
+
+	c1, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+
+	c2, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+
+	assert.Equal(t, c1, c2)
+
+	// Mutating c1 must not affect c2
+	c1[0] = 0xFF
+	assert.NotEqual(t, c1[0], c2[0])
+
+	c3, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Equal(t, c2, c3)
+}
+
+func TestGetSerializedContentOnEmptyAndUninitializedWriterReturnsIndependentEmptySlices(t *testing.T) {
+	t.Run("empty initialized writer", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		c1, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.NotNil(t, c1)
+		assert.Empty(t, c1)
+
+		c2, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.NotNil(t, c2)
+		assert.Empty(t, c2)
+	})
+
+	t.Run("uninitialized writer struct", func(t *testing.T) {
+		uninitializedWriter := &MultipartSerializationWriter{}
+
+		c1, err := uninitializedWriter.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.NotNil(t, c1)
+		assert.Empty(t, c1)
+
+		c2, err := uninitializedWriter.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.NotNil(t, c2)
+		assert.Empty(t, c2)
+	})
+
+	t.Run("closed writer", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		val := "sample"
+		assert.NoError(t, serializer.WriteStringValue("", &val))
+		assert.NoError(t, serializer.Close())
+
+		c, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.NotNil(t, c)
+		assert.Empty(t, c)
+	})
+}
