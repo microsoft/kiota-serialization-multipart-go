@@ -2,6 +2,7 @@ package multipartserialization
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
@@ -34,8 +35,9 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	if value == nil {
 		return nil
 	}
-	if key != "" {
-		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
+	trimmedKey := strings.TrimSpace(key)
+	if trimmedKey != "" {
+		if err := w.WriteByteArrayValue("", []byte(trimmedKey)); err != nil {
 			return err
 		}
 		if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
