@@ -337,6 +337,34 @@ func TestWriteStringValueWithEmptyKeyAndValue(t *testing.T) {
 	assert.Equal(t, "raw content line\r\n", string(content))
 }
 
+func TestWriteStringValueHeaderKeyNormalization(t *testing.T) {
+	t.Run("trims leading and trailing whitespace from header key", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "application/json"
+		err := serializer.WriteStringValue("  Content-Type  ", &val)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "Content-Type: application/json\r\n", string(content))
+	})
+
+	t.Run("whitespace-only key is treated as unkeyed content", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "unkeyed body line"
+		err := serializer.WriteStringValue("   \t   ", &val)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "unkeyed body line\r\n", string(content))
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
