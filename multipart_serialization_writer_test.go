@@ -402,12 +402,49 @@ func TestWriteStringValueCRLFValidation(t *testing.T) {
 		assert.EqualError(t, err, "header value cannot contain CRLF characters")
 	})
 
+	t.Run("returns error when header key is CRLF-only", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		crlfKeys := []string{"\r\n", "\r", "\n", "\r\n\r\n"}
+		val := "application/json"
+		for _, key := range crlfKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain CRLF characters")
+		}
+	})
+
+	t.Run("returns error when header key is CRLF-padded", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		paddedKeys := []string{"  Content-Type\r\n", "\r\nContent-Type  ", "\r\nContent-Type\r\n", "\nContent-Type\r"}
+		val := "application/json"
+		for _, key := range paddedKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain CRLF characters")
+		}
+	})
+
 	t.Run("allows multiline value when key is empty", func(t *testing.T) {
 		serializer := NewMultipartSerializationWriter()
 		defer serializer.Close()
 
 		val := "first line\r\nsecond line"
 		err := serializer.WriteStringValue("", &val)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "first line\r\nsecond line\r\n", string(content))
+	})
+
+	t.Run("allows multiline value when key is whitespace-only", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "first line\r\nsecond line"
+		err := serializer.WriteStringValue("   \t   ", &val)
 		assert.NoError(t, err)
 
 		content, err := serializer.GetSerializedContent()

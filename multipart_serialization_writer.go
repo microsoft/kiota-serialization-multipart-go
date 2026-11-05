@@ -35,11 +35,11 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	if value == nil {
 		return nil
 	}
+	if strings.ContainsAny(key, "\r\n") {
+		return errors.New("header key cannot contain CRLF characters")
+	}
 	trimmedKey := strings.TrimSpace(key)
 	if trimmedKey != "" {
-		if strings.ContainsAny(trimmedKey, "\r\n") {
-			return errors.New("header key cannot contain CRLF characters")
-		}
 		if strings.ContainsAny(*value, "\r\n") {
 			return errors.New("header value cannot contain CRLF characters")
 		}
