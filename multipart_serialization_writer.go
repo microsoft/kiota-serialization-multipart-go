@@ -37,6 +37,12 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	}
 	trimmedKey := strings.TrimSpace(key)
 	if trimmedKey != "" {
+		if strings.ContainsAny(trimmedKey, "\r\n") {
+			return errors.New("header key cannot contain CRLF characters")
+		}
+		if strings.ContainsAny(*value, "\r\n") {
+			return errors.New("header value cannot contain CRLF characters")
+		}
 		if err := w.WriteByteArrayValue("", []byte(trimmedKey)); err != nil {
 			return err
 		}
