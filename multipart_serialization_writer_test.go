@@ -365,6 +365,57 @@ func TestWriteStringValueHeaderKeyNormalization(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueCRLFValidation(t *testing.T) {
+	t.Run("returns error when header key contains carriage return", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "application/json"
+		err := serializer.WriteStringValue("Content\r-Type", &val)
+		assert.EqualError(t, err, "header key cannot contain CRLF characters")
+	})
+
+	t.Run("returns error when header key contains newline", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "application/json"
+		err := serializer.WriteStringValue("Content\n-Type", &val)
+		assert.EqualError(t, err, "header key cannot contain CRLF characters")
+	})
+
+	t.Run("returns error when header value contains carriage return", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "text/plain\r\nX-Injected: value"
+		err := serializer.WriteStringValue("Content-Type", &val)
+		assert.EqualError(t, err, "header value cannot contain CRLF characters")
+	})
+
+	t.Run("returns error when header value contains newline", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "text/plain\nInjected: true"
+		err := serializer.WriteStringValue("Content-Type", &val)
+		assert.EqualError(t, err, "header value cannot contain CRLF characters")
+	})
+
+	t.Run("allows multiline value when key is empty", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		val := "first line\r\nsecond line"
+		err := serializer.WriteStringValue("", &val)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "first line\r\nsecond line\r\n", string(content))
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
