@@ -22,6 +22,8 @@ func TestItGetsASerializationWriter(t *testing.T) {
 		" multipart/form-data; charset=utf-8 ",
 		"multipart/form-data ; boundary=abc",
 		"multipart/form-data\t; boundary=abc",
+		"\"multipart/form-data\"",
+		"\"multipart/form-data\"; boundary=abc",
 	}
 	for _, ct := range validContentTypes {
 		writer, err := instance.GetSerializationWriter(ct)
