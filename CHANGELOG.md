@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.6](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.5...v1.1.6) (2026-11-06)
+
+
+### Bug Fixes
+
+* **multipart:** handle nil and empty collections in WriteCollection methods ([c15b8ca](https://github.com/microsoft/kiota-serialization-multipart-go/commit/c15b8ca48e213d6e928a6e4aa3384504c9f06ad0))
+* **multipart:** normalize header keys and prevent malformed headers in WriteStringValue ([a2939ce](https://github.com/microsoft/kiota-serialization-multipart-go/commit/a2939ce4c48f6192a035bb53dddec74317465faa))
+* **multipart:** normalize header keys and validate CRLF in WriteStringValue ([846e008](https://github.com/microsoft/kiota-serialization-multipart-go/commit/846e00845549c48f18bf9f5abe7bc57388694a28))
+* **multipart:** omit nil header string values and handle nil buffer in get serialized content ([32c1695](https://github.com/microsoft/kiota-serialization-multipart-go/commit/32c16958ef493cd368db61a5cb9808d761b4c467))
+* **multipart:** reject CRLF in header keys prior to whitespace trimming ([49b81cb](https://github.com/microsoft/kiota-serialization-multipart-go/commit/49b81cb3557bcdd944f9ac171c751e738357e1f6))
+* **multipart:** validate header keys and values against CRLF injection in WriteStringValue ([0400eee](https://github.com/microsoft/kiota-serialization-multipart-go/commit/0400eeedd207ff97c278d14245fec932d8850333))
+
 ## [1.1.5](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.4...v1.1.5) (2026-11-03)
 
 
