@@ -453,6 +453,98 @@ func TestWriteStringValueCRLFValidation(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueColonValidation(t *testing.T) {
+	t.Run("returns error when header key contains colon", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		colonKeys := []string{
+			"Content-Type:",
+			":Content-Type",
+			"Content:Type",
+			"Content-Type: text/plain",
+			":",
+			" : ",
+		}
+		val := "text/plain"
+		for _, key := range colonKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain colon characters")
+		}
+	})
+}
+
+func TestWriteStringValueWhitespaceValidation(t *testing.T) {
+	t.Run("returns error when header key contains internal whitespace", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		whitespaceKeys := []string{
+			"Content Type",
+			"Content\tType",
+			"Content  Type",
+			"X Custom Header",
+			" Content Type ",
+		}
+		val := "text/plain"
+		for _, key := range whitespaceKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain whitespace")
+		}
+	})
+}
+
+func TestWriteStringValueNullByteKeyValidation(t *testing.T) {
+	t.Run("returns error when header key contains null character", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		nullKeys := []string{
+			"Content\x00-Type",
+			"\x00Content-Type",
+			"Content-Type\x00",
+			"\x00",
+			" \x00 ",
+		}
+		val := "text/plain"
+		for _, key := range nullKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain null characters")
+		}
+	})
+}
+
+func TestWriteStringValueNullByteValueValidation(t *testing.T) {
+	t.Run("returns error when named header value contains null character", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		nullValues := []string{
+			"text/plain\x00injected",
+			"\x00text/plain",
+			"text/plain\x00",
+			"\x00",
+		}
+		for _, val := range nullValues {
+			err := serializer.WriteStringValue("Content-Type", &val)
+			assert.EqualError(t, err, "header value cannot contain null characters")
+		}
+	})
+
+	t.Run("allows null characters in unkeyed content line", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		rawVal := "binary\x00data\x00payload"
+		err := serializer.WriteStringValue("", &rawVal)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "binary\x00data\x00payload\r\n", string(content))
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
