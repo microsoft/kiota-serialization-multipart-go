@@ -40,6 +40,9 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	}
 	trimmedKey := strings.TrimSpace(key)
 	if trimmedKey != "" {
+		if strings.Contains(trimmedKey, ":") {
+			return errors.New("header key cannot contain colon characters")
+		}
 		if strings.ContainsAny(*value, "\r\n") {
 			return errors.New("header value cannot contain CRLF characters")
 		}
