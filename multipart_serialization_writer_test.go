@@ -474,6 +474,26 @@ func TestWriteStringValueColonValidation(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueWhitespaceValidation(t *testing.T) {
+	t.Run("returns error when header key contains internal whitespace", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		whitespaceKeys := []string{
+			"Content Type",
+			"Content\tType",
+			"Content  Type",
+			"X Custom Header",
+			" Content Type ",
+		}
+		val := "text/plain"
+		for _, key := range whitespaceKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain whitespace")
+		}
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
