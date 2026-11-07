@@ -453,6 +453,27 @@ func TestWriteStringValueCRLFValidation(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueColonValidation(t *testing.T) {
+	t.Run("returns error when header key contains colon", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		colonKeys := []string{
+			"Content-Type:",
+			":Content-Type",
+			"Content:Type",
+			"Content-Type: text/plain",
+			":",
+			" : ",
+		}
+		val := "text/plain"
+		for _, key := range colonKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain colon characters")
+		}
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
