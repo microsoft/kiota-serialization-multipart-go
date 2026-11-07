@@ -52,6 +52,9 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 		if strings.ContainsAny(*value, "\r\n") {
 			return errors.New("header value cannot contain CRLF characters")
 		}
+		if strings.Contains(*value, "\x00") {
+			return errors.New("header value cannot contain null characters")
+		}
 		if err := w.WriteByteArrayValue("", []byte(trimmedKey)); err != nil {
 			return err
 		}
