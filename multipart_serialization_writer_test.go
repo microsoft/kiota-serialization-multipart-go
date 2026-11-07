@@ -514,6 +514,37 @@ func TestWriteStringValueNullByteKeyValidation(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueNullByteValueValidation(t *testing.T) {
+	t.Run("returns error when named header value contains null character", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		nullValues := []string{
+			"text/plain\x00injected",
+			"\x00text/plain",
+			"text/plain\x00",
+			"\x00",
+		}
+		for _, val := range nullValues {
+			err := serializer.WriteStringValue("Content-Type", &val)
+			assert.EqualError(t, err, "header value cannot contain null characters")
+		}
+	})
+
+	t.Run("allows null characters in unkeyed content line", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		rawVal := "binary\x00data\x00payload"
+		err := serializer.WriteStringValue("", &rawVal)
+		assert.NoError(t, err)
+
+		content, err := serializer.GetSerializedContent()
+		assert.NoError(t, err)
+		assert.Equal(t, "binary\x00data\x00payload\r\n", string(content))
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
