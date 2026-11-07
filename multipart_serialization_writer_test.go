@@ -494,6 +494,26 @@ func TestWriteStringValueWhitespaceValidation(t *testing.T) {
 	})
 }
 
+func TestWriteStringValueNullByteKeyValidation(t *testing.T) {
+	t.Run("returns error when header key contains null character", func(t *testing.T) {
+		serializer := NewMultipartSerializationWriter()
+		defer serializer.Close()
+
+		nullKeys := []string{
+			"Content\x00-Type",
+			"\x00Content-Type",
+			"Content-Type\x00",
+			"\x00",
+			" \x00 ",
+		}
+		val := "text/plain"
+		for _, key := range nullKeys {
+			err := serializer.WriteStringValue(key, &val)
+			assert.EqualError(t, err, "header key cannot contain null characters")
+		}
+	})
+}
+
 func TestGetSerializedContentOnUninitializedWriter(t *testing.T) {
 	uninitializedWriter := &MultipartSerializationWriter{}
 	content, err := uninitializedWriter.GetSerializedContent()
