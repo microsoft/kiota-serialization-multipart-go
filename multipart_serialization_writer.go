@@ -3,6 +3,7 @@ package multipartserialization
 import (
 	"errors"
 	"reflect"
+	"strings"
 	"time"
 
 	abstractions "github.com/microsoft/kiota-abstractions-go"
@@ -35,8 +36,15 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	if value == nil {
 		return nil
 	}
-	if key != "" {
-		if err := w.WriteByteArrayValue("", []byte(key)); err != nil {
+	if strings.ContainsAny(key, "\r\n") {
+		return errors.New("header key cannot contain CRLF characters")
+	}
+	trimmedKey := strings.TrimSpace(key)
+	if trimmedKey != "" {
+		if strings.ContainsAny(*value, "\r\n") {
+			return errors.New("header value cannot contain CRLF characters")
+		}
+		if err := w.WriteByteArrayValue("", []byte(trimmedKey)); err != nil {
 			return err
 		}
 		if err := w.WriteByteArrayValue("", []byte(": ")); err != nil {
