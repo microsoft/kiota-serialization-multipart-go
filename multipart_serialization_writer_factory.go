@@ -39,7 +39,8 @@ func (f *MultipartSerializationWriterFactory) GetSerializationWriter(contentType
 	}
 
 	mediaType, _, _ := strings.Cut(trimmed, ";")
-	if !strings.EqualFold(strings.TrimSpace(mediaType), validType) {
+	mediaType = strings.Trim(strings.TrimSpace(mediaType), "\"")
+	if !strings.EqualFold(mediaType, validType) {
 		return nil, errors.New("contentType is not valid")
 	}
 

@@ -2,6 +2,7 @@ package multipartserialization
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"time"
 
@@ -200,13 +201,29 @@ func (w *MultipartSerializationWriter) WriteByteArrayValue(key string, value []b
 }
 
 // WriteObjectValue writes a Parsable value to underlying the byte array.
+func isNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	val := reflect.ValueOf(i)
+	switch val.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Func, reflect.Chan, reflect.Slice, reflect.Interface, reflect.UnsafePointer:
+		return val.IsNil()
+	}
+	return false
+}
+
 func (w *MultipartSerializationWriter) WriteObjectValue(key string, item absser.Parsable, additionalValuesToMerge ...absser.Parsable) error {
 	if w == nil {
 		return errors.New("writer cannot be nil")
 	}
-	if item != nil {
-		if _, ok := item.(abstractions.MultipartBody); !ok {
+	if item != nil && !isNil(item) {
+		body, ok := item.(abstractions.MultipartBody)
+		if !ok {
 			return errors.New("only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+		}
+		if body.GetBoundary() == "" {
+			return errors.New("multipart body boundary cannot be empty")
 		}
 		abstractions.InvokeParsableAction(w.GetOnBeforeSerialization(), item)
 		err := abstractions.InvokeParsableWriter(w.GetOnStartObjectSerialization(), item, w)
