@@ -38,10 +38,22 @@ func (w *MultipartSerializationWriter) WriteStringValue(key string, value *strin
 	if strings.ContainsAny(key, "\r\n") {
 		return errors.New("header key cannot contain CRLF characters")
 	}
+	if strings.Contains(key, "\x00") {
+		return errors.New("header key cannot contain null characters")
+	}
 	trimmedKey := strings.TrimSpace(key)
 	if trimmedKey != "" {
+		if strings.Contains(trimmedKey, ":") {
+			return errors.New("header key cannot contain colon characters")
+		}
+		if strings.ContainsAny(trimmedKey, " \t") {
+			return errors.New("header key cannot contain whitespace")
+		}
 		if strings.ContainsAny(*value, "\r\n") {
 			return errors.New("header value cannot contain CRLF characters")
+		}
+		if strings.Contains(*value, "\x00") {
+			return errors.New("header value cannot contain null characters")
 		}
 		if err := w.WriteByteArrayValue("", []byte(trimmedKey)); err != nil {
 			return err
