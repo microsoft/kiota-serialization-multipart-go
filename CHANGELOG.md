@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.7](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.6...v1.1.7) (2026-11-17)
+
+
+### Bug Fixes
+
+* **multipart:** improve writer boundary validation, typed nil safety, and factory quote parsing ([8228900](https://github.com/microsoft/kiota-serialization-multipart-go/commit/8228900a854f11fedbd001c858ca6484bd08a3fb))
+* **multipart:** validate header keys and reject colons, whitespace, and null characters in WriteStringValue ([cc858b4](https://github.com/microsoft/kiota-serialization-multipart-go/commit/cc858b4987a7170490a2da2c11df607685028db1))
+
 ## [1.1.6](https://github.com/microsoft/kiota-serialization-multipart-go/compare/v1.1.5...v1.1.6) (2026-11-11)
 
 
