@@ -277,6 +277,79 @@ func TestNilWriterUnsupportedMethodsReturnNilError(t *testing.T) {
 	assert.EqualError(t, nilWriter.WriteCollectionOfInt8Values("k", nil), "writer cannot be nil")
 }
 
+type mockTypedNilMultipartBody struct {
+	abstractions.MultipartBody
+}
+
+func TestWriteObjectValueWithTypedNilBodyDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var nilBody *mockTypedNilMultipartBody
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", nilBody)
+		assert.NoError(t, err)
+	})
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+func TestWriteObjectValueWithTypedNilEntityDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var nilEntity *internal.TestEntity
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", nilEntity)
+		assert.NoError(t, err)
+	})
+	content, err := serializer.GetSerializedContent()
+	assert.NoError(t, err)
+	assert.Empty(t, content)
+}
+
+type mockEmptyBoundaryMultipartBody struct {
+	abstractions.MultipartBody
+}
+
+func (m *mockEmptyBoundaryMultipartBody) GetBoundary() string {
+	return ""
+}
+
+func TestWriteObjectValueWithEmptyBoundaryReturnsError(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	body := &mockEmptyBoundaryMultipartBody{
+		MultipartBody: abstractions.NewMultipartBody(),
+	}
+	err := serializer.WriteObjectValue("key", body)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "multipart body boundary cannot be empty")
+}
+
+type mockArrayParsable [3]int
+
+func (m mockArrayParsable) GetFieldDeserializers() map[string]func(absser.ParseNode) error {
+	return nil
+}
+func (m mockArrayParsable) Serialize(writer absser.SerializationWriter) error {
+	return nil
+}
+
+func TestWriteObjectValueWithArrayParsableDoesNotPanic(t *testing.T) {
+	serializer := NewMultipartSerializationWriter()
+	defer serializer.Close()
+
+	var arr mockArrayParsable
+	assert.NotPanics(t, func() {
+		err := serializer.WriteObjectValue("key", arr)
+		assert.Error(t, err)
+		assert.EqualError(t, err, "only the serialization of multipart bodies is supported with MultipartSerializationWriter")
+	})
+}
+
 func TestMultipartSerializationWriterHonoursInterface(t *testing.T) {
 	instance := NewMultipartSerializationWriter()
 	assert.Implements(t, (*absser.SerializationWriter)(nil), instance)
